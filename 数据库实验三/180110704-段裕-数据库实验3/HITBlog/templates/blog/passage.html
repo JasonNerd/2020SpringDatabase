@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% block header %}
+    <h1 >{% block title %} {{post[g.PASSAGE_TITLE]}} {% endblock %}</h1>
+    {% if g.user %}
+    {% if g.user[0]==post[1] %}
+        <div style="float: right; display: inline"><a href="{{url_for('blog.update_passage', passage_id=post[0], user_id=post[1]) }}">重新编辑</a> </div>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <form action="{{ url_for('blog.delete_passage', passage_id=post[0], user_id=post[1]) }}" style="float: right; display: inline">
+            <input class="danger" type="submit" value="删除" onclick=" return confirm('确定删除本贴？');">
+        </form>
+        <div style="float: right; display: inline">
+    {% endif %}
+    {% endif %}
+{% endblock %}
+{% block content %}
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='modelBox.css')}}">
+
+
+<div id="box" style="width:800px;display:flex;flex-wrap:wrap; min-height: 360px ">
+    <div style="width: 18%">
+    </div>
+    <div style="width: 60%; display:block;word-break: break-all;word-wrap: break-word;">
+
+        <article class="post">
+          <header>
+              <div class="about" style="alignment: right; padding-bottom: 10px">
+                  by <a href="{{url_for('blog.homepage', user_id=post[1])}}"> {{ post[5] }} </a>on {{ post[g.PUBLIC_DATE] }}
+              </div>
+              <div style="display: inline; margin-left: 5px" >
+                  {% for label in passage_labels %}
+                  <a href="{{ url_for('blog.label_list', label_id=label[1]) }}"
+                     style="color: slategray; margin-right: 5px; float: left">{{ label[0] }}</a>
+                  {% endfor %}
+              </div>
+          </header>
+          <p class="body">{{ post[g.PASSAGE_CONTENT] }}</p>
+        </article>
+
+        <div style="margin-top: 60px; margin-bottom: 60px" class="cfc">
+            <div style="display: inline; margin-right:20px;">
+            {% if g.user %}
+                <p class="like" style="cursor:pointer; "
+                   onclick="favourite({{g.user[0]}}, {{post[0]}}, {{post[6]}})">&#10084;</p>
+                <p class="like" id="like">{{post[6]}}喜欢</p>
+            {% else %}
+                <p class="like" style="cursor:pointer;"
+                   onclick="favourite(0, {{post[0]}}, {{post[6]}})">&#10084;</p>
+                <p class="like">{{post[6]}}喜欢</p>
+            {% endif %}
+            </div>
+            <div style="display: inline; margin-right:20px;">
+                {% if g.user %}
+                <p class="like" style="cursor:pointer;" id="triggerBtn">&#9733;</p>
+                <p class="like" >{{post[8]}}收藏</p>
+                {% else %}
+                <p class="like" style="cursor:pointer;" onclick="alert('请登录后进行操作')">&#9733;</p>
+                <p class="like">{{post[8]}}收藏</p>
+                {% endif %}
+            </div>
+            <div style="display: inline; margin-right:20px;">
+                <p class="like">&#9998;</p>
+                <p class="like">{{post[7]}}评论</input>
+            </div>
+        </div>
+
+        <form method="post" style="width: available; margin-top: 100px; height: available; " >
+            <label for="comment" style="margin-top: 100px">评论</label>
+            <textarea name="comment" style="min-width: 600px; font-size: medium; font-family: 'Adobe 楷体 Std R'"
+                      {% if g.user %}placeholder="评论一下这篇文章吧... ..."{% else %}
+                      placeholder="请登录后评论... ..."{% endif %}
+                      id="comment"></textarea>
+            <input id="subcom" type="submit" style=" align-self: start; min-width: 10em; margin-top: 1em;
+    font-size: large; background: #b4654d; font-weight: bold" value="发表">
+        </form>
+
+        <comments class="comments">
+            {% if g.user %}
+            <br>
+            <h3>全部留言</h3>
+            <hr><br>
+            {% for cm in comments %}
+            <div>
+                <div class="com_mes">
+                    <p class="cmtper">#{{comments.index(cm)+1}}楼 <a href="{{url_for('blog.homepage', user_id=cm[2])}}"> {{nicknames[comments.index(cm)]}}</a>
+                        <span class="date" style="alignment: right; font-style: italic;">{{cm[5]}}:
+                        </span>
+                        <span style="color: #d4c2c5; float: right;">
+                            <span style=" cursor: pointer" onclick="comment_applause({{g.user[0]}}, {{cm[0]}})">&#10084;&nbsp;</span>
+                            <span>{{cm[4]}}</span>
+                        </span>
+                    </p>
+                </div>
+                <div class="sig_comment" style="padding-left: 40px; font-family: 'Consolas', 'Deja Vu Sans Mono', 'Bitstream Vera Sans Mono', monospace">
+                    {% if cm[3] == 0 %}
+                    <p class="cmtcontent">{{cm[6][:20]}}</p>
+                    {% else %}
+                    <p class="cmtcontent" style="background-color: rgba(137,185,193,0.52)">回复 {{cm[6][:20]}}</p><br>
+                    <p class="cmtcontent" style="display: inline">{{cm[6][20:]}}</p>
+                    {% endif %}
+                    {% if g.user[0] == cm[2] %}
+                    <a href="javascript:;" onclick="del_comment(this, {{cm[0]}})" class="del_comment" style="float: right; alignment: right; font-weight: bold">删除</a>
+                    {% endif %}
+                </div>
+                <div id="get_reply">
+                        <a href="javascript:;"
+                           onclick="reply_to_it(this, {{comments.index(cm)}}, {{cm[0]}},  {{post[0]}})"
+                           id="reply_btn" >回复
+                        </a>
+                </div>
+            </div>
+                {% if not loop.last %}
+                <hr>
+                {% endif %}
+            {% endfor %}
+            {% else %}
+            <a href="{{url_for('auth.login')}}">请登录后查看评论内容</a>
+            {% endif %}
+        </comments>
+
+    </div>
+    <div style="width: 18%"></div>
+</div>
+<div class="modal" id="myModal">
+    <div class="modal-content" style="max-width: 400px">
+        <div class="modal-header">
+                <h2>请选择收藏夹</h2>
+                <span id="closeBtn" class="close">×</span>
+        </div>
+        <div class="modal-body">
+            <label style="margin-top: 20px">
+            <select id="opts" style="background-color: #7faad4; font-size: large">
+                {% for clt in g.collector %}
+                <option value="{{clt[1]}}">{{clt[2]}}</option>
+                {% endfor %}
+            </select>
+            </label>
+        </div>
+        <div class="modal-footer">
+            <button id="confirmBtn" style="align-self: start; min-width: 10em; margin-top: 1em;font-size: large;
+            background: #b4654d; font-weight: bold" onclick="cope_collector({{g.user[0]}}, {{post[0]}})">确定</button>
+        </div>
+    </div>
+</div>
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.js"></script>
+<script type="text/javascript">
+    function favourite(log_in_user, passage_id, like_cnt) {
+        if(log_in_user == 0){
+            alert("请登录后进行操作");
+            return false;
+        }
+        var data = {
+            data: JSON.stringify({
+                'passage_id': passage_id,
+                'user_id': log_in_user,
+                'like_cnt': like_cnt
+            })
+        };
+        $.ajax({
+            url:"{{url_for('passage.cope_favour')}}",
+            method:"POST",
+            data:data,
+            dataType:'json',
+            success:function (data) {
+                location.reload()
+            },
+            error:function () {
+                alert("服务器繁忙，请稍后再试！")
+            }
+        })
+    }
+</script>
+<script type="text/javascript">
+    var cmt_content = document.getElementById('comment')
+    var submit = document.getElementById('subcom')
+    submit.onclick = function () {
+        if(cmt_content.value==""||cmt_content.value==null){
+            alert("内容不允许为空！");
+            return false;
+        }
+    };
+    function reply_to_it(is_me, k, com, upass) {
+        //清空回复框，每次只显示一个
+        del_all_reply();
+        //为触发单击事件的按钮添加回复框
+        var para = document.createElement('div');
+        para.setAttribute('class', 'reply_textarea');
+        var con = document.createElement('textarea');
+        con.id = 'reply_area';
+        con.setAttribute('name', 'reply');
+        con.style.width='400px';
+        con.style.height='50px';
+        con.style.resize='none';
+
+        var inp = document.createElement('input');
+        inp.setAttribute('class', 'cmtok');
+        inp.setAttribute('type', 'submit');
+        inp.setAttribute('value', '发表');
+        inp.id = 'fabu';
+        var cnc = document.createElement('a');
+        var txt = document.createTextNode('取消');
+        cnc.setAttribute('href', 'javascript:;');
+        cnc.id = 'cnc';
+        cnc.appendChild(txt);
+        para.appendChild(con);
+        para.appendChild(inp);
+        para.appendChild(document.createElement('br'));
+        para.appendChild(cnc);
+
+        is_me.parentNode.appendChild(para);
+        var lou_cen = k;
+        var dt_cmt_par_id = com;
+        var now_passage_id = upass;
+
+        //获取发布内容
+        var a_fabu = document.getElementById('fabu');
+        if(a_fabu){
+            a_fabu.onclick=function () {
+                var txt = document.getElementById('reply_area');
+                if(txt.value=="" || txt.value==null){
+                    alert("内容不允许为空！");
+                    return false;
+                }
+                //否则展示并向后台传数据
+                /**向后台发送数据**/
+                var data={
+                    data: JSON.stringify({
+                        'passage_id':now_passage_id,
+                        'parent_id':dt_cmt_par_id,
+                        'comment_content':txt.value,
+                        'lou':lou_cen+1
+                    })
+                };
+
+                $.ajax({
+                    url:"{{url_for('passage.reply_op')}}",
+                    method:"POST",
+                    data:data,
+                    dataType:'json',
+                    success:function () {
+                        alert('评论审核中，稍后显示');
+                        location.reload()
+                    },
+                    error:function () {
+
+                    }
+                })
+            };
+        }
+
+        //取消回复
+         var a_cnc = document.getElementById('cnc');
+        if(a_fabu){
+            a_cnc.onclick = del_all_reply;
+        }
+        //清空回复框
+        function del_all_reply() {
+            //清空回复框
+            var if_reply_many = document.getElementsByClassName('reply_textarea');
+            var i;
+            for(i=0; i<if_reply_many.length; i++)
+                if_reply_many[i].remove();
+        }
+    }
+
+    function del_comment(is_cm, cmt) {
+        alert("确认删除评论吗？");
+        is_cm.parentNode.parentNode.remove();
+        var data = {
+            data:JSON.stringify({
+                'comment_id': cmt
+            })
+        };
+        console.log(cmt)
+        $.ajax({
+            url: "{{url_for('passage.del_comment')}}",
+            method: "POST",
+            data: data,
+            dataType: 'json',
+            success: function () {
+                alert('删除成功');
+                location.reload()
+            },
+            error: function () {
+
+            }
+        })
+
+    }
+
+</script>
+<script type="text/javascript">
+    function cope_collector(log_in_user, passage_id) {
+        var data = {
+                'passage_id': passage_id,
+                'user_id': log_in_user,
+                };
+        makeSure(data);
+    }
+    function makeSure(cat) {
+        document.getElementById("myModal").style.display="none";
+        var opts = document.getElementById('opts');
+        var ind = opts.selectedIndex;
+        var collector_id = opts.options[ind].value;   //收藏夹id
+        var data = {
+            data:JSON.stringify({
+                'passage_id':cat['passage_id'],
+                'user_id':cat['user_id'],
+                'collector_id':collector_id
+            })
+        };
+        $.ajax({
+            url:"{{url_for('passage.cope_collector')}}",
+            method:"POST",
+            data:data,
+            dataType:'json',
+            success:function (data) {
+                if(data['status'] == 0){
+                    alert("您已在该收藏夹下收藏过该文章");
+                    return false;
+                }else if (data['status'] == 1){
+                    location.reload();
+                }
+            },
+            error:function () {
+                alert("服务器繁忙，请稍后再试！")
+            }
+        })
+    }
+</script>
+<script type="text/javascript">
+    function comment_applause(user_id, comment_id) {
+        //#d4c2c5
+        data = {
+            data:JSON.stringify({
+                'user_id':user_id,
+                'comment_id':comment_id
+            })
+        };
+        $.ajax({
+            url:"{{url_for('passage.comment_applause')}}",
+            method:"POST",
+            data:data,
+            dataType:'json',
+            success:function (data) {
+                if(data['status'] == 0){
+                    alert("服务器繁忙，请稍后再试！");
+                    return false;
+                }else if (data['status'] == 1){
+                    location.reload();
+                }
+            },
+            error:function () {
+                alert("服务器繁忙，请稍后再试！")
+            }
+        })
+    }
+</script>
+<script>
+    (function() {
+	/*建立模态框对象*/
+	var modalBox = {};
+	/*获取模态框*/
+	modalBox.modal = document.getElementById("myModal");
+    /*获得trigger按钮*/
+	modalBox.triggerBtn = document.getElementById("triggerBtn");
+    /*获得关闭按钮*/
+	modalBox.closeBtn = document.getElementById("closeBtn");
+
+	modalBox.show = function() {
+		this.modal.style.display = "block";
+	};
+	/*模态框关闭*/
+	modalBox.close = function() {
+		this.modal.style.display = "none";
+	};
+	/*当用户点击模态框内容之外的区域，模态框也会关闭*/
+	modalBox.outsideClick = function() {
+		var modal = this.modal;
+		window.onclick = function(event) {
+            if(event.target == modal) {
+            	modal.style.display = "none";
+            }
+		};
+	};
+    /*模态框初始化*/
+	modalBox.init = function() {
+		var that = this;
+		this.triggerBtn.onclick = function() {
+            that.show();
+		};
+		this.closeBtn.onclick = function() {
+			that.close();
+		};
+		this.outsideClick();
+	};
+	modalBox.init();
+})();
+</script>
+
+{% endblock %}

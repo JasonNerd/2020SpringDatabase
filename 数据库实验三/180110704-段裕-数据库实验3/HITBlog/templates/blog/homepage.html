@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% block header %}
+    <h1>{% block title %}{{ user_base_info[1] }}的个人主页{% endblock %}</h1>
+    {% if is_me == 1 %}
+    <!--TODO: 注销用户；编辑绑定信息 -->
+    <a align="right" href="{{ url_for('blog.remove_user', user_id=g.user[0]) }}"
+       style="font-weight: bold; margin-right: 10px; display: none">注销账户</a>
+    <a align="right" href="{{ url_for('blog.publish', user_id=g.user[0]) }}"
+       style="font-weight: bold; margin-right: 10px;">发布博客</a>
+    <a align="right" href="javascript:; " onclick="update_user()"
+       style="font-weight: bold; margin-right: 10px;">编辑绑定信息</a>
+    {% endif %}
+    {% if is_me == 0 and g.user %}
+    <a href="javascript:; " style="font-weight: bold" onclick="guan_zhu({{g.user[0]}}, {{blog_info[0]}})">关注TA</a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div id="box" style="width:800px;display:flex;flex-wrap:wrap;">
+    <div style="width: 30%; display:block;word-break: break-all;word-wrap: break-word;">
+        <p>HIT博客ID：{{ blog_info[0] }}</p>
+        <p>注册日期：{{user_base_info[3].strftime('%Y-%m-%d')}}</p>
+        <p>发表文章数：{% if blog_info %}{{ blog_info[3] }} {% else %} 用户未展示 {% endif %}</p>
+        <p>文章获评数：{% if blog_info %}{{ blog_info[2] }} {% else %} 用户未展示 {% endif %}</p>
+        <p>获得喜欢数：{% if blog_info %}{{ blog_info[1] }} {% else %} 用户未展示 {% endif %}</p>
+        <p>个人邮箱：{% if user_base_info %}{{ user_base_info[4] }} {% else %} 用户未展示 {% endif %}</p>
+        {% if g.user and is_me==0 %}
+        <p>性 别：{% if user_base_info %}{{ user_base_info[2] }} {% else %} 用户未展示 {% endif %}</p>
+        <p>生 日：{% if user_base_info %}{{ user_base_info[5] }} {% else %} 用户未展示 {% endif %}</p>
+        <p>关 注：{{ guanzhushu }} 人</p>
+        <p>粉 丝：{{ fensishu }} 人</p>
+        <p>文章收藏: {{ clshu }}</p>
+        {% endif %}
+        {% if not g.user %}
+        <a href="{{ url_for('auth.login') }}">登录查看更多博主信息</a>
+        {% endif %}
+        {% if is_me == 1 %}
+        <p>性 别：{% if user_base_info %}{{ user_base_info[2] }} {% else %} 用户未展示 {% endif %}</p>
+        <p>生 日：{% if user_base_info %}{{ user_base_info[5] }} {% else %} 用户未展示 {% endif %}</p>
+        <p>手 机：{% if user_base_info %}{{ user_base_info[6] }} {% else %} 用户未展示 {% endif %}</p>
+        <a href="javascript:;" onclick="get_guanzhu()">关 注：{{ guanzhushu }} 人</a><br><br>
+        <a href="javascript:;" onclick="get_fen_si()">粉 丝：{{ fensishu }} 人</a><br><br>
+        <a href="javascript:;" onclick="get_collector()">收藏文章：{{ clshu }}篇</a>
+        {% endif %}
+    </div>
+    <div style="float:left;width: 2px;height: auto; background: darkgray;"></div>
+    <div style="width: 60%; padding-left: 10px" id="mes_container" >
+        <div id="passage_list">
+            {% for passage in passages %}
+            <article class="post">
+                <header>
+                    <h1 ><a href="{{url_for('passage.passages', passage_id=passage[2])}}" >{{ passage[1] }}</a></h1>
+                </header>
+                <p class="body">{{ passage[0][:50].replace("\n", "") + " ..." }}</p>
+            </article>
+            {% if not loop.last %}
+            <hr>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <div id="collector_list" style="display: none">
+            <a href="javascript:;" onclick="inc_collector({{user_base_info[0]}})"
+            style="font-size: 20px; float: right; font-weight: bold; margin-top: 20px;">新建收藏夹</a>
+            <br><br><br>
+            <div id = "inp_box" style="display: none">
+                <input id="inp_val" type="text" style="height: 30px; width: 468px; font-size: 20px; " >
+                <button id="inp_confirm" style="min-width: 5em; margin-top: 10px; margin-bottom: 10px; font-size: large; background: #b4654d;
+                font-weight: bold ">确认</button>
+                <button id="inp_cancel" style="min-width: 5em;float: right; margin-top: 10px; margin-bottom: 10px; font-size: large; background: #b4654d;
+                font-weight: bold " onclick="get_collector()">取消</button>
+            </div>
+            <div id="collectors">
+                {% for ct in g.collector %}
+                <a href="javascript:;" style="font-size: 20px;"
+                   onclick="scd({{g.collector.index(ct)}})">{{ ct[2] }}</a>
+                <button style="float: right;  font-size:background-color: #b4654d; display: none;
+                font-weight: bold" onclick="del_collector({{g.collector.index(ct)}}, {{user_base_info[0]}})">删除</button>
+                <br><br>
+                {% endfor %}
+            </div>
+        </div>
+        <div id="guanzhu_list" style="display: none">
+            {% if guanzhushu == 0 %}
+            <p>这里还是一片荒原，快去发现更多有趣的博主吧</p>{% else %}
+            {% for gz in guan_zhu_list %}
+            <a href='{{ url_for("blog.homepage", user_id=gz[1])}}'>{{gz[1]}}</a><br>
+            <p>您关注TA的时间：{{gz[0]}}</p>
+            {% if not loop.last %}<hr>{% endif %}
+            {% endfor %}{% endif %}
+        </div>
+        <div id="fensi_list" style="display: none">
+            {% if fensishu == 0 %}
+            <p>还没有人关注你哦，快去发布更多优质内容吧</p>{% else %}
+            {% for gz in fen_si_list %}
+            <a href={{ url_for("blog.homepage", user_id=gz[1])}}>{{gz[1]}}</a><br>
+            <p>TA关注您的时间：{{gz[0]}}</p>
+            {% if not loop.last %}<hr>{% endif %}
+            {% endfor %}{% endif %}
+        </div>
+        <div id="single_collector_details" style="display: none">
+            {% for collect in collectors_all %}
+            <div>
+                {% if collect %}
+                {% for passage_info in collect %}
+                    <a style="font-size: 20px" href="{{ url_for('passage.passages', passage_id=passage_info[0]) }}">
+                        {{ passage_info[1] }}
+                    </a>
+                    <p style="font-size: 10px; color: slategray;">{{ passage_info[2] }}</p>
+                {% endfor %}
+                {% else %}
+                    <p style="color: rgba(105,145,180,0.78); font-size: x-large;
+                    margin-top: 50px; margin-left: 30px">这个收藏夹里空空如也</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% if g.user %}
+        <div style="text-align: center; display: none" id="update_user">
+            <form method="post" action="{{ url_for('blog.update_user', user_id=g.user[0]) }}">
+                <label for="username">昵称 </label>
+                <input name="username" id="username" style="width: 300px; height:30px;"
+                       value="{{ user_base_info[1] }}" required>
+                <br>
+                <label for="phone">手机 </label>
+                <input name="phone" id="phone" style="width: 300px; height:30px;"
+                        value="{{ user_base_info[6] }}" >
+                <br>
+                <label for="mail_address">邮箱 </label>
+                <input name="mail_address" type="email" id="mail_address" style="width: 300px; height:30px;"
+                        value="{{ user_base_info[4] }}" >
+                <br>
+                <input type="submit" style=" align-self: start; min-width: 10em; margin-top: 1em;
+                    font-size: large; background: #b4654d; font-weight: bold " value="保 存">
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<script>
+    function update_user() {
+        opc(document.getElementById('update_user'));
+    }
+</script>
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.js"></script>
+<script>
+    function guan_zhu(fensi, niuren) {
+        //处理关注情况
+        if(fensi == niuren){
+            alert('不可以关注自己');
+            return false;
+        }
+        data = {
+            data:JSON.stringify({
+                'from_user_id': fensi,
+                'to_user_id': niuren
+            })
+        };
+        $.ajax({
+            url: "{{url_for('blog.follower')}}",
+            method: "POST",
+            data: data,
+            dataType: 'json',
+            success: function (data) {
+                if(data['conflict']==1){
+                    alert('您已关注过');
+                }else {
+                    alert('谢谢关注');
+                }
+            },
+            error: function () {
+                alert('关注失败，请稍后再试');
+            }
+        });
+    }
+    function opc(ele) {
+        var passage_list = document.getElementById('passage_list');
+        var guanzhu_list = document.getElementById('guanzhu_list');
+        var collector_list = document.getElementById('collector_list');
+        var fensi_list = document.getElementById('fensi_list');
+        var update_user = document.getElementById('update_user');
+        var single_collector_details = document.getElementById('single_collector_details');
+        passage_list.style.display='none';
+        guanzhu_list.style.display='none';
+        collector_list.style.display='none';
+        fensi_list.style.display='none';
+        update_user.style.display='none';
+        single_collector_details.style.display='none';
+        ele.style.display='block';
+    }
+    function get_guanzhu() {
+        var guanzhu_list = document.getElementById('guanzhu_list');
+        opc(guanzhu_list);
+    }
+    function get_fen_si() {
+        var fensi_list = document.getElementById('fensi_list');
+        opc(fensi_list);
+    }
+    function get_collector() {
+        var collector_list = document.getElementById('collector_list');
+        var inp_box = document.getElementById('inp_box');
+        inp_box.style.display='none';
+        opc(collector_list);
+    }
+    function inc_collector(user_id) {
+        var inp_box = document.getElementById('inp_box');
+        var inp_confirm = document.getElementById('inp_confirm');
+        var inp_val = document.getElementById('inp_val');
+        var collector_name;
+        inp_box.style.display = 'block';
+        inp_confirm.onclick = function () {
+            collector_name = inp_val.value;
+            if(collector_name == "" || collector_name==null || collector_name.trim() == ""){
+                alert('名称不可以为空');
+                return false;
+            }else {
+                var data = {
+                    data: JSON.stringify({
+                        'user_id': user_id,
+                        'collector_name': collector_name.trim()
+                    })
+                };
+                console.log(user_id);
+                console.log(data);
+                $.ajax({
+                    url: "{{url_for('passage.create_collector')}}",
+                    method: "POST",
+                    data: data,
+                    dataType: 'json',
+                    success: function (data) {
+                        get_collector();
+                    },
+                    error: function () {
+                        alert('服务器繁忙，请稍后再试');
+                    }
+                });
+            }
+        }
+    }
+    function scd(collect_id) {
+        var single_collector_details = document.getElementById('single_collector_details');
+        opc(single_collector_details);
+        var all_child = single_collector_details.children;
+        var i, n=all_child.length;
+        for(i=0; i<n; i++){
+            all_child[i].style.display='block';
+            if(i != collect_id){
+                all_child[i].style.display='none';
+            }
+        }
+    }
+    function del_collector(collector_id, user_id) {
+
+    }
+</script>
+{% endblock %}

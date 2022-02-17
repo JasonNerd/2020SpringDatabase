@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %}HIT博客{% endblock %}</h1>
+    <form action="{{ url_for('blog.search') }}" method="post">
+    <input name="search" style="float: left; margin-bottom: 5px;
+    width: 200px; height:25px;" placeholder="搜索您感兴趣的文章">
+    <button style="float: left;font-size: large; background: #b4654d; margin-top: 12px;
+    margin-left:8px; font-weight: bold" type="submit">搜索</button>
+    </form>
+{% endblock %}
+
+{% block content %}
+  <div id="main_content">
+  {% for post in posts %}
+    <article class="post">
+      <header>
+        <div>
+          <h1><a href="{{ url_for('passage.passages', passage_id = post[g.PASSAGE_ID]) }}" >{{ post[g.PASSAGE_TITLE] }}</a></h1>
+          <div class="about">by {{ post[g.NICK_NAME] }} on {{ post[g.PUBLIC_DATE].strftime('%Y-%m-%d') }}</div>
+        </div>
+      </header>
+      <p class="body">{{ post[g.PASSAGE_CONTENT][:20]+"... ..." }}</p>
+    </article>
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+  {% endfor %}
+  </div>
+  <div id="search_result">
+
+  </div>
+{% endblock %}

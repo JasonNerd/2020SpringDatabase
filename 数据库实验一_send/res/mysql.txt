@@ -1,0 +1,28 @@
+2021-03-15
+思考题：使用Query Profiler、Explain进行SQL语句性能分析。导入Employees数据库：Employees Sample Database 
+是MySQL官方提供的测试数据库。该测试库含有6个表，总计4百万数据记录。
+1、导入MySQL 的数据库Employees
+A、添加环境变量C:\Program Files\MySQL\MySQL Server 8.0\bin到PATH中
+B、git clone https://github.com/datacharmer/test_db
+C、在test_db路径下执行cmd mysql -u root -p < employees.sql
+D、输入密码即可
+
+2、使用explain语句
+数据库查询优化：使用explain分析sql语句执行效率
+https://blog.csdn.net/qq_22075041/article/details/80583858)
+结果值从好到坏依次是：
+system > const > eq_ref > ref > fulltext > ref_or_null > index_merge > unique_subquery > index_subquery > range > index > ALL
+一般来说，得保证查询至少达到range级别，最好能达到ref，否则就可能会出现性能问题。
+•system: const 的一种特例，表中只有一行数据
+•const: 当确定最多只会有一行匹配的时候，MySQL优化器会在查询前读取它而且只读取一次，因此非常快。使用主键查询往往就是 const 级别的，非常高效
+•eq_ref: 最多只返回一条符合条件的记录，通过使用在两个表有关联字段的时候
+•ref: 通过普通索引查询匹配的很多行时的类型
+•fulltext: 全文索引
+•ref_or_null: 跟 ref 类似的效果，不过多一个列不能 null 的条件
+•index_merge: 此连接类型表示使用了索引合并优化。在这种情况下，输出行中的 key 列包含使用的索引列表，key_len包含所用索引的最长 key 部分列表
+•unique_subquery: 在使用 in 查询的情况下会取代 eq_ref
+•range: 范围扫描，一个有限制的索引扫描。key 列显示使用了哪个索引。当使用=、 <>、>、>=、<、<=、IS NULL、<=>、BETWEEN 或者 IN 操作符，用常量比较关键字列时,可以使用 range
+•index: 类似全表扫描，只是扫描表的时候按照索引次序进行而不是行。主要优点就是避免了排序, 但是开销仍然非常大。如在Extra列看到Using index，说明正在使用覆盖索引，只扫描索引的数据，它比按索引次序全表扫描的开销要小很多
+•ALL: 全表扫描
+Query Profiler 和Explain 用法详解
+https://www.cnblogs.com/yuyue2014/p/3776915.html

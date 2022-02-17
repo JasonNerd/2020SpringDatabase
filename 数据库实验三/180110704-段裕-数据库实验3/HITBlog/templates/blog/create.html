@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block header %}
+    <h1>{% block title %}博客发布{% endblock %}</h1>
+{% endblock %}
+
+
+{% block content %}
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='modelBox.css')}}">
+<div class="modal" id="myModal">
+    <div class="modal-content" style="max-width: 400px">
+        <div class="modal-header">
+            <h2>请选择文章标签</h2>
+            <span id="closeBtn" class="close">×</span>
+        </div>
+        <div class="modal-body" name="passageLabel" id="passageLabel">
+            {% for passage_label in labels %}
+            <label name="label_txt"><input type="checkbox" name="label" value="{{passage_label[0]}}">{{passage_label[1]}}</label>
+            {% endfor %}
+        </div>
+        <div class="modal-footer">
+            <button id="confirmBtn" style="align-self: start; min-width: 10em; margin-top: 1em;font-size: large;
+            background: #b4654d; font-weight: bold" onclick="cope_label(1)">确定</button>
+        </div>
+    </div>
+</div>
+<button id="triggerBtn" style="height:28px; margin-top: 30px; float: right; margin-right: 60px">选择标签</button>
+<div id="preview"></div>
+<div style="text-align: center;">
+    <input name="title" id="title" style="width: 300px; height:30px; margin-top: 30px"
+           placeholder="文章标题（必填）" value="{{request.form['title']}}"  required>
+    <br><br><br>
+    <textarea name="body" style="width: 800px; font-size: medium; font-family: 'Adobe 楷体 Std R'"
+              placeholder="写点什么分享一下吧... ..." id="body"></textarea>
+    <br>
+    <button style="align-self: start; min-width: 10em; margin-top: 1em;
+    font-size: large; background: #b4654d; font-weight: bold" onclick="submit_data({{ user_id }})">保存</button>
+    <a id="publish_cancel" href="{{ url_for('blog.homepage', user_id=user_id) }}" style="min-width: 10em; margin-top: 1em;
+    font-size: large; background: #b4654d; font-weight: bold ; float: right; margin-right: 180px; ">取消</a>
+</div>
+<script type="text/javascript" src="{{url_for('static', filename='modelBox.js')}}"></script>
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.js"></script>
+<script type="text/javascript">
+    function submit_data(user_id) {
+        var label_list = cope_label(0);
+        var title = document.getElementById('title').value;
+        var body = document.getElementById('body').value;
+        if(title.length==0){
+            alert('请填写文章标题');
+            return false;
+        }
+        if(body.length==0){
+            alert('文章内容不能为空');
+            return false;
+        }
+        var data = {
+            data:JSON.stringify({
+                'labels':label_list,
+                'title':title,
+                'body':body
+            })
+        };
+        $.ajax({
+            url:"{{url_for('blog.publish', user_id=user_id)}}",
+            method:"POST",
+            data:data,
+            dataType:'json',
+            success:function (data) {
+                document.getElementById('publish_cancel').click();
+            },
+            error:function () {
+                alert("服务器繁忙，请稍后再试！")
+            }
+        })
+    }
+    function cope_label(choice) {
+        document.getElementById("myModal").style.display="none";
+        var all_label = document.getElementsByName("label");
+        var txt_label = document.getElementsByName("label_txt");
+        var label_data = [], i;
+        for(i = 0; i< all_label.length; i++) {
+            if (all_label[i].checked) {
+                label_data.push({"id":all_label[i].value, "name":txt_label[i].innerText});
+            }
+        }
+        //preview
+        var div_container = document.getElementById('preview');
+        div_container.innerHTML='';
+        var label_list=[];
+        if(label_data.length>0){
+            var n=label_data.length;
+            for(i=0; i<n; i++){
+                var txt = document.createElement('input');
+                txt.setAttribute('type','checkbox');
+                txt.setAttribute('checked', 'checked');
+                txt.setAttribute('disabled', 'disabled');
+                var pl = document.createElement('label');
+                pl.appendChild(document.createTextNode(label_data[i]['name']));
+                pl.appendChild(txt);
+                if(choice==1)
+                    div_container.appendChild(pl);
+                label_list.push(label_data[i]['id']);
+            }
+        }else {
+            alert("您未选择任何标签，文章标签将默认为【茶馆】");
+            var txt2 = document.createElement('input');
+                txt2.setAttribute('type','checkbox');
+                txt2.setAttribute('checked', 'checked');
+                txt2.setAttribute('disabled', 'disabled');
+                var pl2 = document.createElement('label');
+                pl2.appendChild(document.createTextNode('茶馆'));
+                pl2.appendChild(txt2);
+                if(choice==1)
+                    div_container.appendChild(pl2);
+                label_list.push('0023');
+        }
+        return label_list;
+	}
+</script>
+{% endblock %}

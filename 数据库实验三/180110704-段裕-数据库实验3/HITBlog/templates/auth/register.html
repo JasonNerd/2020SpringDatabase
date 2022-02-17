@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}注 册{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div style="text-align: center;">
+  <form method="post">
+      <label for="username">昵称 </label>
+      <input name="username" id="username" style="width: 300px; height:30px;"placeholder="昵称（8个汉字以内、英文字符15个以内）" required>
+      <br>
+      <label for="password">密码 </label>
+      <input type="password" name="password" id="password" style="width: 300px; height:30px;" placeholder="密码（6到16个英文字母数字组合）" required>
+      <br>
+      <label for="phone">手机 </label>
+      <input name="phone" id="phone" style="width: 300px; height:30px;"placeholder="中国大陆地区手机号(+86)" >
+      <br>
+      <label for="mail_address">邮箱 </label>
+      <input name="mail_address" type="email" id="mail_address" style="width: 300px; height:30px;"placeholder="常用邮箱" >
+      <br>
+      <label for="male">男</label>
+      <input type="radio" name="gender" id="male" value="M" checked="checked"/>
+      <label for="female">女</label>
+      <input type="radio" name="gender" id="female" value="F" /><br>
+      <label for="birthday">生日 </label>
+      <input type="date" id="birthday" name="birthday" style="width: 300px; height:30px;" value="date"/><br>
+      <input type="submit" style=" align-self: start; min-width: 10em; margin-top: 1em;
+    font-size: large; background: #b4654d; font-weight: bold " value="注 册">
+  </form>
+    <p style="margin-top: 20px; font-size: 20px; color: rgba(192,193,195,0.9);
+   font-family: 'Adobe 仿宋 Std R'">注意：注册后仅可以修改【手机】、【邮箱】、【昵称】等信息，请务必仔细核实</p>
+</div>
+{% endblock %}

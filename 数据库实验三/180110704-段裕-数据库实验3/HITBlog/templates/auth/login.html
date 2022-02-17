@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}请登录{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div style="text-align: center;">
+  <form method="post">
+    <label for="username">账号</label>
+    <input name="username" id="username" style="width: 300px; height:30px;
+            "placeholder="昵称/手机/邮箱"required><br>
+    <label for="password">密码</label>
+    <input type="password" name="password" id="password"style="width: 300px; height:30px;
+            "placeholder="密码" required><br>
+    <input type="submit" style="align-self: start; min-width: 10em; margin-top: 1em;
+    font-size: large; background: #b4654d; font-weight: bold" value="登 录">
+  </form>
+</div>
+{% endblock %}

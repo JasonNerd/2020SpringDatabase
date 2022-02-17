@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}编辑 "{{ post[2] }}"{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post" style="margin-top: 60px;">
+    <label for="title" style=" font-size: large">标题</label>
+    <input name="title" id="title"style="min-width: 250px; font-size: medium; font-family: 'Adobe 楷体 Std R'"
+      value="{{ request.form['title'] or post[2] }}" required><hr><br>
+    <label for="body">内容</label><br>
+    <textarea name="body" id="body" style="min-width: 600px; font-size: medium; font-family: 'Adobe 楷体 Std R'">{{ request.form['body'] or post[4] }}</textarea>
+    <br><input type="submit" style="align-self: start; min-width: 10em; margin-top: 1em;
+    font-size: large; background: #b4654d; font-weight: bold"value="保存">
+    <a href="{{url_for('blog.homepage', user_id=post[1])}}" style="float: right; display: inline; min-width: 10em; margin-top: 1em;
+    font-size: large; background: #b4654d; font-weight: bold">取消</a>
+  </form>
+{% endblock %}
